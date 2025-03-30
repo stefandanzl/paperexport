@@ -30,7 +30,7 @@ export default class PaperExportPlugin extends Plugin {
             id: 'export-current-file',
             name: 'Export Current File as PDF',
             editorCheckCallback: (checking) => {
-                const activeView = this.app.workspace.getActiveViewOfType('markdown');
+                const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
                 if (activeView) {
                     if (!checking) {
                         const file = this.app.workspace.getActiveFile();

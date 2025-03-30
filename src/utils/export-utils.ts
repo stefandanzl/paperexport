@@ -1,5 +1,6 @@
 import { PaperExportSettings } from '../settings/settings';
 import { TFile, Vault, normalizePath } from 'obsidian';
+import { getVaultBasePath } from './vault-helpers';
 import * as path from 'path';
 import * as fs from 'fs';
 import { promisify } from 'util';
@@ -235,8 +236,8 @@ export async function ensureOutputDirectory(
     exportPath: string,
     vault: Vault
 ): Promise<string> {
-    // Access vault root path - implementation may need to be adjusted based on Obsidian API
-    const vaultPath = vault.adapter.basePath;
+    // Get the vault path
+    const vaultPath = await getVaultBasePath(vault);
     const fullPath = path.join(vaultPath, exportPath);
     
     // Create directory if it doesn't exist
@@ -260,7 +261,7 @@ export async function exportToPdf(
         // Ensure output directory exists
         const outputDir = settings.exportPath 
             ? await ensureOutputDirectory(settings.exportPath, vault)
-            : vault.adapter.basePath;
+            : await getVaultBasePath(vault);
         
         // Get HTML template
         const template = await getTemplate(settings.templatePath, vault);
