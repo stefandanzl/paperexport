@@ -1,9 +1,7 @@
-/* eslint-disable no-useless-escape */
 import { PaperExportSettings } from "../settings/settings";
 import { TFile, Vault, normalizePath } from "obsidian";
 import * as Showdown from "showdown";
 import * as htmlPdfNode from "html-pdf-node";
-import * as puppeteer from "puppeteer";
 
 // Default HTML template
 const DEFAULT_TEMPLATE = `<!DOCTYPE html>
@@ -281,8 +279,6 @@ export async function htmlToPdf(
 				left: settings.margins.left,
 			},
 			printBackground: true,
-			// Explicitly pass the puppeteer instance
-			puppeteer: puppeteer,
 		};
 
 		// Create the PDF
