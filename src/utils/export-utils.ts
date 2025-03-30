@@ -1,6 +1,6 @@
 /* eslint-disable no-useless-escape */
 import { PaperExportSettings } from "../settings/settings";
-import { TFile, Vault, normalizePath } from "obsidian";
+import { Notice, TFile, Vault, normalizePath } from "obsidian";
 import * as Showdown from "showdown";
 import * as htmlPdfNode from "html-pdf-node";
 // Since direct import of html-pdf-node and showdown might have compatibility issues,
@@ -271,7 +271,7 @@ export async function htmlToPdf(
 	html: string,
 	outputPath: string,
 	settings: PaperExportSettings
-): Promise<string> {
+): Promise<void | Buffer | undefined> {
 	try {
 		// Use html-pdf-node to generate PDF
 		// We need to dynamically import it because it's not available in Obsidian's environment directly
@@ -285,15 +285,23 @@ export async function htmlToPdf(
 				bottom: settings.margins.bottom,
 				left: settings.margins.left,
 			},
-			path: outputPath,
+			// path: outputPath,
 			printBackground: true,
 		};
 
 		// Create the PDF
 		const file = { content: html };
-		await htmlPdfNode.generatePdf(file, options);
 
-		return outputPath;
+		let pdfBuffer: ArrayBufferLike;
+		console.log("FILLE", file);
+		htmlPdfNode.generatePdf(file, options, (err, buffer) => {
+			if (err) {
+				new Notice("PDF Conversion error " + err.message);
+				throw new Error("PDF");
+			}
+			pdfBuffer = buffer;
+		});
+		return pdfBuffer;
 	} catch (error) {
 		console.error("Error generating PDF:", error);
 		throw new Error(`Failed to generate PDF: ${error.message}`);
@@ -331,7 +339,7 @@ export async function exportToPdf(
 	outputFilename: string,
 	settings: PaperExportSettings,
 	vault: Vault
-): Promise<string> {
+) {
 	try {
 		// Make sure we have a valid filename
 		if (!outputFilename || outputFilename.trim() === "") {
@@ -355,9 +363,11 @@ export async function exportToPdf(
 			outputPath = normalizePath(`${outputFilename}.pdf`);
 		}
 
+		console.log("OUTPUT PATH: ", outputPath);
 		// Get HTML template
 		const template = await getTemplate(settings.templatePath, vault);
 
+		console.log(template);
 		// Convert markdown to HTML
 		const html = markdownToHtml(
 			markdownContent,
@@ -366,8 +376,17 @@ export async function exportToPdf(
 			template
 		);
 
+		console.log("htlm", html);
+
 		// Generate PDF
-		await htmlToPdf(html, outputPath, settings);
+		const buffer = (await htmlToPdf(
+			html,
+			outputPath,
+			settings
+		)) as ArrayBufferLike;
+
+		console.log("buffer", buffer);
+		await vault.adapter.writeBinary(outputPath, buffer);
 
 		return outputPath;
 	} catch (error) {
