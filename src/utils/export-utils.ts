@@ -2,7 +2,9 @@
 import { PaperExportSettings } from "../settings/settings";
 import { Notice, TFile, Vault, normalizePath } from "obsidian";
 import * as Showdown from "showdown";
-import * as htmlPdfNode from "html-pdf-node";
+// import * as htmlPdfNode from "html-pdf-node";
+// import * as jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
 // Since direct import of html-pdf-node and showdown might have compatibility issues,
 // we'll handle these dynamically at runtime
 
@@ -164,7 +166,7 @@ export function markdownToHtml(
 	title: string,
 	settings: PaperExportSettings,
 	template: string
-): string {
+) {
 	try {
 		// Use showdown to convert markdown to HTML
 
@@ -207,67 +209,36 @@ export function markdownToHtml(
 		console.error("Error converting markdown to HTML:", error);
 
 		// Fallback to basic conversion if showdown fails
-		return basicMarkdownToHtml(markdown, title, settings, template);
+		// return basicMarkdownToHtml(markdown, title, settings, template);
 	}
 }
 
-/**
- * Basic fallback markdown to HTML conversion without requiring external libraries
- */
-function basicMarkdownToHtml(
-	markdown: string,
-	title: string,
-	settings: PaperExportSettings,
-	template: string
-): string {
-	// Replace template placeholders
-	let html = template
-		.replace("{{title}}", title)
-		.replace("{{customCss}}", settings.customCss || "")
-		.replace("{{#if renderMathJax}}", settings.renderMathJax ? "" : "<!--")
-		.replace("{{/if}}", settings.renderMathJax ? "" : "-->");
+export async function htmlToPdf(
+	html: string,
+	outputPath: string,
+	settings: PaperExportSettings
+) {
+	const doc = new jsPDF("p", "mm", "a4");
 
-	// Simple markdown to HTML conversion (very basic)
-	const contentHtml = markdown
-		// Headers
-		.replace(/^# (.*$)/gm, "<h1>$1</h1>")
-		.replace(/^## (.*$)/gm, "<h2>$1</h2>")
-		.replace(/^### (.*$)/gm, "<h3>$1</h3>")
-		// Bold
-		.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-		// Italic
-		.replace(/\*(.*?)\*/g, "<em>$1</em>")
-		// Paragraphs
-		.replace(/^\s*(\n)?(.+)/gm, function (m) {
-			return /^<(\/)?(h\d|p|ul|ol|li|blockquote|pre|img)/.test(m)
-				? m
-				: "<p>" + m + "</p>";
+	//@ts-ignore
+	return await doc
+		.html(html, {
+			// callback: (doc) => {
+			// 	doc.save();
+			// },
 		})
-		// Line breaks
-		.replace(/^\s*[\r\n]/gm, "")
-		// Code blocks
-		.replace(
-			/```([a-z]*)\n([\s\S]*?)\n```/g,
-			'<pre><code class="language-$1">$2</code></pre>'
-		)
-		// Inline code
-		.replace(/`([^`]+)`/g, "<code>$1</code>")
-		// Page breaks
-		.replace(
-			/<div class="page-break"><\/div>/g,
-			'<div style="page-break-after: always;"></div>'
-		);
-
-	// Insert converted content into template
-	html = html.replace("{{content}}", contentHtml);
-
-	return html;
+		.outputPdf("arraybuffer");
+	// fromHTML Method
+	// doc.fromHTML(html);
+	// doc.save("output.pdf");
+	// return await doc.output("arraybuffer", "myfile");
 }
 
 /**
  * Generate a PDF file from HTML
  */
-export async function htmlToPdf(
+/**
+ * export async function htmlToPdf2(
 	html: string,
 	outputPath: string,
 	settings: PaperExportSettings
@@ -307,7 +278,7 @@ export async function htmlToPdf(
 		throw new Error(`Failed to generate PDF: ${error.message}`);
 	}
 }
-
+*/
 /**
  * Ensure the output directory exists
  */
@@ -375,6 +346,9 @@ export async function exportToPdf(
 			settings,
 			template
 		);
+		if (!html) {
+			throw new Error("No HTML");
+		}
 
 		console.log("htlm", html);
 

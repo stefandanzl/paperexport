@@ -13,12 +13,13 @@
 	"license": "MIT",
 	"dependencies": {
 		"html-pdf-node": "^1.0.8",
-		"showdown": "^2.1.0",
-		"puppeteer": "^13.0.0"
+		"jspdf": "^3.0.1",
+		"puppeteer": "^13.0.0",
+		"showdown": "^2.1.0"
 	},
 	"devDependencies": {
-		"@types/node": "^16.11.6",
 		"@types/html-pdf-node": "^1.0.0",
+		"@types/node": "^16.11.6",
 		"@types/showdown": "^2.0.0",
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
