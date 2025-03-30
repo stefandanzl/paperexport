@@ -13,7 +13,8 @@
 	"license": "MIT",
 	"dependencies": {
 		"html-pdf-node": "^1.0.8",
-		"showdown": "^2.1.0"
+		"showdown": "^2.1.0",
+		"puppeteer": "^13.0.0"
 	},
 	"devDependencies": {
 		"@types/node": "^16.11.6",

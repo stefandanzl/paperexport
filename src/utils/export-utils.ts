@@ -1,10 +1,7 @@
-import { PaperExportSettings } from '../settings/settings';
-import { TFile, Vault, normalizePath } from 'obsidian';
-import { getVaultBasePath } from './vault-helpers';
-import * as path from 'path';
-import * as fs from 'fs';
-import { promisify } from 'util';
-
+import { PaperExportSettings } from "../settings/settings";
+import { TFile, Vault, normalizePath } from "obsidian";
+import * as Showdown from "showdown";
+import * as htmlPdfNode from "html-pdf-node";
 // Since direct import of html-pdf-node and showdown might have compatibility issues,
 // we'll handle these dynamically at runtime
 
@@ -132,155 +129,236 @@ const DEFAULT_TEMPLATE = `<!DOCTYPE html>
  * Read a custom template file or return the default template
  */
 export async function getTemplate(
-    templatePath: string,
-    vault: Vault
+	templatePath: string,
+	vault: Vault
 ): Promise<string> {
-    if (!templatePath) {
-        return DEFAULT_TEMPLATE;
-    }
+	if (!templatePath) {
+		return DEFAULT_TEMPLATE;
+	}
 
-    try {
-        const normalizedPath = normalizePath(templatePath);
-        const templateFile = vault.getAbstractFileByPath(normalizedPath);
-        
-        if (templateFile instanceof TFile) {
-            return await vault.read(templateFile);
-        }
-        
-        // If template file not found, fall back to default
-        console.warn(`Template file not found: ${templatePath}. Using default template.`);
-        return DEFAULT_TEMPLATE;
-    } catch (error) {
-        console.error('Error reading template:', error);
-        return DEFAULT_TEMPLATE;
-    }
+	try {
+		const normalizedPath = normalizePath(templatePath);
+		const templateFile = vault.getAbstractFileByPath(normalizedPath);
+
+		if (templateFile instanceof TFile) {
+			return await vault.read(templateFile);
+		}
+
+		// If template file not found, fall back to default
+		console.warn(
+			`Template file not found: ${templatePath}. Using default template.`
+		);
+		return DEFAULT_TEMPLATE;
+	} catch (error) {
+		console.error("Error reading template:", error);
+		return DEFAULT_TEMPLATE;
+	}
 }
 
 /**
  * Convert markdown to HTML using showdown
  */
 export function markdownToHtml(
-    markdown: string,
-    title: string,
-    settings: PaperExportSettings,
-    template: string
+	markdown: string,
+	title: string,
+	settings: PaperExportSettings,
+	template: string
 ): string {
-    // This would ideally use the require() function, but that might not be available
-    // in the Obsidian environment. Consider bundling these dependencies.
-    
-    // For now, we'll simulate the conversion process
-    
-    // Replace template placeholders
-    let html = template
-        .replace('{{title}}', title)
-        .replace('{{customCss}}', settings.customCss || '')
-        .replace('{{#if renderMathJax}}', settings.renderMathJax ? '' : '<!--')
-        .replace('{{/if}}', settings.renderMathJax ? '' : '-->');
-    
-    // Convert markdown to HTML
-    // This is a placeholder for actual conversion
-    // In real implementation, you'd use showdown or another md->html converter
-    
-    // Simple markdown to HTML conversion (very basic)
-    let contentHtml = markdown
-        // Headers
-        .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-        .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-        .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-        // Bold
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        // Italic
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        // Paragraphs
-        .replace(/^\s*(\n)?(.+)/gm, function(m) {
-            return /^<(\/)?(h\d|p|ul|ol|li|blockquote|pre|img)/.test(m) ? m : '<p>' + m + '</p>';
-        })
-        // Line breaks
-        .replace(/^\s*[\r\n]/gm, '')
-        // Code blocks
-        .replace(/```([a-z]*)\n([\s\S]*?)\n```/g, '<pre><code class="language-$1">$2</code></pre>')
-        // Inline code
-        .replace(/`([^`]+)`/g, '<code>$1</code>')
-        // Page breaks
-        .replace(/<div class="page-break"><\/div>/g, '<div style="page-break-after: always;"></div>');
-    
-    // Insert converted content into template
-    html = html.replace('{{content}}', contentHtml);
-    
-    return html;
+	try {
+		// Use showdown to convert markdown to HTML
+
+		// Configure showdown
+		const converter = new Showdown.Converter({
+			tables: true,
+			tasklists: true,
+			strikethrough: true,
+			ghCodeBlocks: true,
+			smoothLivePreview: true,
+			simpleLineBreaks: true,
+			openLinksInNewWindow: true,
+			emoji: true,
+		});
+
+		// Convert the markdown content to HTML
+		let contentHtml = converter.makeHtml(markdown);
+
+		// Handle page breaks
+		contentHtml = contentHtml.replace(
+			/<div class="page-break"><\/div>/g,
+			'<div style="page-break-after: always;"></div>'
+		);
+
+		// Replace template placeholders
+		let html = template
+			.replace("{{title}}", title)
+			.replace("{{customCss}}", settings.customCss || "")
+			.replace(
+				"{{#if renderMathJax}}",
+				settings.renderMathJax ? "" : "<!--"
+			)
+			.replace("{{/if}}", settings.renderMathJax ? "" : "-->");
+
+		// Insert converted content into template
+		html = html.replace("{{content}}", contentHtml);
+
+		return html;
+	} catch (error) {
+		console.error("Error converting markdown to HTML:", error);
+
+		// Fallback to basic conversion if showdown fails
+		return basicMarkdownToHtml(markdown, title, settings, template);
+	}
+}
+
+/**
+ * Basic fallback markdown to HTML conversion without requiring external libraries
+ */
+function basicMarkdownToHtml(
+	markdown: string,
+	title: string,
+	settings: PaperExportSettings,
+	template: string
+): string {
+	// Replace template placeholders
+	let html = template
+		.replace("{{title}}", title)
+		.replace("{{customCss}}", settings.customCss || "")
+		.replace("{{#if renderMathJax}}", settings.renderMathJax ? "" : "<!--")
+		.replace("{{/if}}", settings.renderMathJax ? "" : "-->");
+
+	// Simple markdown to HTML conversion (very basic)
+	const contentHtml = markdown
+		// Headers
+		.replace(/^# (.*$)/gm, "<h1>$1</h1>")
+		.replace(/^## (.*$)/gm, "<h2>$1</h2>")
+		.replace(/^### (.*$)/gm, "<h3>$1</h3>")
+		// Bold
+		.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+		// Italic
+		.replace(/\*(.*?)\*/g, "<em>$1</em>")
+		// Paragraphs
+		.replace(/^\s*(\n)?(.+)/gm, function (m) {
+			return /^<(\/)?(h\d|p|ul|ol|li|blockquote|pre|img)/.test(m)
+				? m
+				: "<p>" + m + "</p>";
+		})
+		// Line breaks
+		.replace(/^\s*[\r\n]/gm, "")
+		// Code blocks
+		.replace(
+			/```([a-z]*)\n([\s\S]*?)\n```/g,
+			'<pre><code class="language-$1">$2</code></pre>'
+		)
+		// Inline code
+		.replace(/`([^`]+)`/g, "<code>$1</code>")
+		// Page breaks
+		.replace(
+			/<div class="page-break"><\/div>/g,
+			'<div style="page-break-after: always;"></div>'
+		);
+
+	// Insert converted content into template
+	html = html.replace("{{content}}", contentHtml);
+
+	return html;
 }
 
 /**
  * Generate a PDF file from HTML
  */
 export async function htmlToPdf(
-    html: string,
-    outputPath: string,
-    settings: PaperExportSettings
+	html: string,
+	outputPath: string,
+	settings: PaperExportSettings
 ): Promise<string> {
-    // In a real implementation, this would use html-pdf-node or another library
-    // Since direct imports might be tricky in Obsidian plugins, you might need
-    // to use a different approach or bundle these libraries
-    
-    // For now, this is a placeholder function that would be replaced
-    // with actual PDF generation in the final implementation
-    
-    // Return the path where the PDF would be saved
-    return outputPath;
+	try {
+		// Use html-pdf-node to generate PDF
+		// We need to dynamically import it because it's not available in Obsidian's environment directly
+
+		// Configure the PDF options
+		const options = {
+			format: settings.pageSize,
+			margin: {
+				top: settings.margins.top,
+				right: settings.margins.right,
+				bottom: settings.margins.bottom,
+				left: settings.margins.left,
+			},
+			path: outputPath,
+			printBackground: true,
+		};
+
+		// Create the PDF
+		const file = { content: html };
+		await htmlPdfNode.generatePdf(file, options);
+
+		return outputPath;
+	} catch (error) {
+		console.error("Error generating PDF:", error);
+		throw new Error(`Failed to generate PDF: ${error.message}`);
+	}
 }
 
 /**
  * Ensure the output directory exists
  */
 export async function ensureOutputDirectory(
-    exportPath: string,
-    vault: Vault
+	exportPath: string,
+	vault: Vault
 ): Promise<string> {
-    // Get the vault path
-    const vaultPath = await getVaultBasePath(vault);
-    const fullPath = path.join(vaultPath, exportPath);
-    
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(fullPath)) {
-        await promisify(fs.mkdir)(fullPath, { recursive: true });
-    }
-    
-    return fullPath;
+	// Get the vault path
+	const normalizedPath = normalizePath(exportPath);
+
+	// Create directory if it doesn't exist
+	// Use Obsidian's vault adapter to ensure the folder exists
+	if (!vault.adapter.exists(normalizedPath)) {
+		await vault.adapter.mkdir(normalizedPath);
+	}
+
+	return normalizedPath;
 }
 
 /**
  * Main export function that coordinates the entire process
  */
 export async function exportToPdf(
-    markdownContent: string,
-    outputFilename: string,
-    settings: PaperExportSettings,
-    vault: Vault
+	markdownContent: string,
+	outputFilename: string,
+	settings: PaperExportSettings,
+	vault: Vault
 ): Promise<string> {
-    try {
-        // Ensure output directory exists
-        const outputDir = settings.exportPath 
-            ? await ensureOutputDirectory(settings.exportPath, vault)
-            : await getVaultBasePath(vault);
-        
-        // Get HTML template
-        const template = await getTemplate(settings.templatePath, vault);
-        
-        // Convert markdown to HTML
-        const html = markdownToHtml(
-            markdownContent,
-            outputFilename,
-            settings,
-            template
-        );
-        
-        // Generate PDF
-        const outputPath = path.join(outputDir, `${outputFilename}.pdf`);
-        await htmlToPdf(html, outputPath, settings);
-        
-        return outputPath;
-    } catch (error) {
-        console.error('Error exporting PDF:', error);
-        throw error;
-    }
+	try {
+		// Determine the output path
+		let outputPath;
+		if (settings.exportPath) {
+			// Ensure export directory exists
+			await ensureOutputDirectory(settings.exportPath, vault);
+			// Normalize the output path
+			outputPath = normalizePath(
+				`${settings.exportPath}/${outputFilename}.pdf`
+			);
+		} else {
+			// Use vault root
+			outputPath = normalizePath(`${outputFilename}.pdf`);
+		}
+
+		// Get HTML template
+		const template = await getTemplate(settings.templatePath, vault);
+
+		// Convert markdown to HTML
+		const html = markdownToHtml(
+			markdownContent,
+			outputFilename,
+			settings,
+			template
+		);
+
+		// Generate PDF
+		await htmlToPdf(html, outputPath, settings);
+
+		return outputPath;
+	} catch (error) {
+		console.error("Error exporting PDF:", error);
+		throw error;
+	}
 }

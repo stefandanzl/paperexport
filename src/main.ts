@@ -4,12 +4,19 @@ import { PaperExportSettingTab } from './settings/settings-tab';
 import { FileSelectionModal } from './ui/file-selection-modal';
 import { mergeFiles } from './utils/merge-utils';
 import { exportToPdf } from './utils/export-utils';
+import { checkDependencies } from './utils/init-dependencies';
 
 export default class PaperExportPlugin extends Plugin {
     settings: PaperExportSettings;
 
     async onload() {
         await this.loadSettings();
+
+        // Check if required dependencies are available
+        const dependenciesAvailable = await checkDependencies();
+        if (!dependenciesAvailable) {
+            new Notice('PaperExport: Required dependencies are not available. PDF export might not work.');
+        }
 
         // Add ribbon icon
         this.addRibbonIcon('file-text-plus', 'Export Academic Paper', () => {
