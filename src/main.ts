@@ -1,4 +1,4 @@
-import { Notice, Plugin, TFile } from 'obsidian';
+import { MarkdownView, Notice, Plugin, TFile } from 'obsidian';
 import { PaperExportSettings, DEFAULT_SETTINGS } from './settings/settings';
 import { PaperExportSettingTab } from './settings/settings-tab';
 import { FileSelectionModal } from './ui/file-selection-modal';
@@ -30,7 +30,7 @@ export default class PaperExportPlugin extends Plugin {
             id: 'export-current-file',
             name: 'Export Current File as PDF',
             editorCheckCallback: (checking) => {
-                const activeView = this.app.workspace.getActiveViewOfType(this.app.workspace.getViewType('markdown'));
+                const activeView = this.app.workspace.getActiveViewOfType('markdown');
                 if (activeView) {
                     if (!checking) {
                         const file = this.app.workspace.getActiveFile();

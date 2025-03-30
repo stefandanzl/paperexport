@@ -4,14 +4,14 @@ import { PaperExportSettings } from '../settings/settings';
 export interface ChapterInfo {
     file: TFile;
     content: string;
-    frontmatter: any;
+    frontmatter: Record<string, string>;
     order: number;
 }
 
 export interface SourceInfo {
     key: string;  // The source identifier (filename without extension)
     file: TFile;
-    frontmatter: any;
+    frontmatter: Record<string, string>;
 }
 
 /**
@@ -43,7 +43,7 @@ export async function processCitations(
         usedSources.add(sourceKey);
         
         // Get the short citation from the frontmatter
-        const shortCitation = source.frontmatter.short || sourceKey;
+        const shortCitation = source.frontmatter['short'] || sourceKey;
         
         // Return the formatted citation
         return `[${shortCitation}]`;
@@ -79,7 +79,7 @@ export async function loadSources(
         const content = await vault.read(file);
         
         // Extract frontmatter
-        let frontmatter = {};
+        let frontmatter: Record<string, string> = {};
         if (content.startsWith('---')) {
             const endFrontMatter = content.indexOf('---', 3);
             if (endFrontMatter !== -1) {
@@ -131,7 +131,7 @@ export async function mergeFiles(
         const content = await vault.read(file);
         
         // Extract frontmatter if available
-        let frontmatter = {};
+        let frontmatter: Record<string, string> = {};
         let cleanContent = content;
         
         // Simple frontmatter extraction (could be improved with a proper YAML parser)
@@ -167,9 +167,9 @@ export async function mergeFiles(
         let order = 999; // Default high number for unordered
         
         if ('order' in frontmatter) {
-            order = parseInt(frontmatter.order);
+            order = parseInt(frontmatter['order']);
         } else if ('chapter' in frontmatter) {
-            order = parseInt(frontmatter.chapter);
+            order = parseInt(frontmatter['chapter']);
         } else {
             // Try to extract order from filename if it starts with a number
             const match = file.basename.match(/^(\d+)/);
@@ -207,14 +207,14 @@ export async function mergeFiles(
             if (!source) continue;
             
             // Get reference information from source frontmatter
-            const title = source.frontmatter.title || '';
-            const author = source.frontmatter.author || '';
-            const year = source.frontmatter.year || '';
-            const journal = source.frontmatter.journal || '';
-            const volume = source.frontmatter.volume || '';
-            const pages = source.frontmatter.pages || '';
-            const publisher = source.frontmatter.publisher || '';
-            const url = source.frontmatter.url || '';
+            const title = source.frontmatter['title'] || '';
+            const author = source.frontmatter['author'] || '';
+            const year = source.frontmatter['year'] || '';
+            const journal = source.frontmatter['journal'] || '';
+            const volume = source.frontmatter['volume'] || '';
+            const pages = source.frontmatter['pages'] || '';
+            const publisher = source.frontmatter['publisher'] || '';
+            const url = source.frontmatter['url'] || '';
             
             // Format the reference
             let reference = '';
@@ -248,8 +248,8 @@ export async function mergeFiles(
         }
 
         // If frontmatter contains a title, add it as a heading
-        if (chapter.frontmatter.title && !chapter.content.trim().startsWith('#')) {
-            mergedContent += `# ${chapter.frontmatter.title}\n\n`;
+        if (chapter.frontmatter['title'] && !chapter.content.trim().startsWith('#')) {
+            mergedContent += `# ${chapter.frontmatter['title']}\n\n`;
         }
 
         mergedContent += chapter.content;

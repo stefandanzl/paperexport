@@ -235,7 +235,8 @@ export async function ensureOutputDirectory(
     exportPath: string,
     vault: Vault
 ): Promise<string> {
-    const vaultPath = vault.adapter.getBasePath();
+    // Access vault root path - implementation may need to be adjusted based on Obsidian API
+    const vaultPath = vault.adapter.basePath;
     const fullPath = path.join(vaultPath, exportPath);
     
     // Create directory if it doesn't exist
@@ -259,7 +260,7 @@ export async function exportToPdf(
         // Ensure output directory exists
         const outputDir = settings.exportPath 
             ? await ensureOutputDirectory(settings.exportPath, vault)
-            : vault.adapter.getBasePath();
+            : vault.adapter.basePath;
         
         // Get HTML template
         const template = await getTemplate(settings.templatePath, vault);
