@@ -1,10 +1,9 @@
 /* eslint-disable no-useless-escape */
 import { PaperExportSettings } from "../settings/settings";
-import { Notice, TFile, Vault, normalizePath } from "obsidian";
+import { TFile, Vault, normalizePath } from "obsidian";
 import * as Showdown from "showdown";
 import * as htmlPdfNode from "html-pdf-node";
-// Since direct import of html-pdf-node and showdown might have compatibility issues,
-// we'll handle these dynamically at runtime
+import * as puppeteer from "puppeteer";
 
 // Default HTML template
 const DEFAULT_TEMPLATE = `<!DOCTYPE html>
@@ -269,13 +268,9 @@ function basicMarkdownToHtml(
  */
 export async function htmlToPdf(
 	html: string,
-	outputPath: string,
 	settings: PaperExportSettings
-): Promise<void | Buffer | undefined> {
+): Promise<Buffer> {
 	try {
-		// Use html-pdf-node to generate PDF
-		// We need to dynamically import it because it's not available in Obsidian's environment directly
-
 		// Configure the PDF options
 		const options = {
 			format: settings.pageSize,
@@ -285,25 +280,29 @@ export async function htmlToPdf(
 				bottom: settings.margins.bottom,
 				left: settings.margins.left,
 			},
-			// path: outputPath,
 			printBackground: true,
+			// Explicitly pass the puppeteer instance
+			puppeteer: puppeteer,
 		};
 
 		// Create the PDF
 		const file = { content: html };
 
-		let pdfBuffer: ArrayBufferLike;
-		console.log("FILLE", file);
-		htmlPdfNode.generatePdf(file, options, (err, buffer) => {
-			if (err) {
-				new Notice("PDF Conversion error " + err.message);
-				throw new Error("PDF");
-			}
-			pdfBuffer = buffer;
+		// Wrap the callback-based API in a Promise
+		return new Promise<Buffer>((resolve, reject) => {
+			htmlPdfNode.generatePdf(file, options, (err, buffer) => {
+				if (err) {
+					console.error("PDF generation error:", err);
+					reject(new Error(`PDF generation failed: ${err.message}`));
+				} else if (buffer) {
+					resolve(buffer);
+				} else {
+					reject(new Error("PDF generation produced no output"));
+				}
+			});
 		});
-		return pdfBuffer;
 	} catch (error) {
-		console.error("Error generating PDF:", error);
+		console.error("Error in htmlToPdf:", error);
 		throw new Error(`Failed to generate PDF: ${error.message}`);
 	}
 }
@@ -362,12 +361,9 @@ export async function exportToPdf(
 			// Use vault root
 			outputPath = normalizePath(`${outputFilename}.pdf`);
 		}
-
-		console.log("OUTPUT PATH: ", outputPath);
 		// Get HTML template
 		const template = await getTemplate(settings.templatePath, vault);
 
-		console.log(template);
 		// Convert markdown to HTML
 		const html = markdownToHtml(
 			markdownContent,
@@ -376,19 +372,16 @@ export async function exportToPdf(
 			template
 		);
 
-		console.log("htlm", html);
-
 		// Generate PDF
-		const buffer = (await htmlToPdf(
-			html,
-			outputPath,
-			settings
-		)) as ArrayBufferLike;
+		try {
+			const buffer = await htmlToPdf(html, settings);
 
-		console.log("buffer", buffer);
-		await vault.adapter.writeBinary(outputPath, buffer);
-
-		return outputPath;
+			await vault.adapter.writeBinary(outputPath, buffer);
+			return outputPath;
+		} catch (pdfError) {
+			console.error("PDF generation error:", pdfError);
+			throw new Error(`Failed to generate PDF: ${pdfError.message}`);
+		}
 	} catch (error) {
 		console.error("Error exporting PDF:", error);
 		throw error;

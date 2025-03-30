@@ -100,16 +100,22 @@ export default class PaperExportPlugin extends Plugin {
 			new Notice("PaperExport: Generating PDF...");
 
 			// Export to PDF
-			const outputPath = await exportToPdf(
-				mergedMarkdown,
-				outputFilename || this.settings.defaultFilename,
-				this.settings,
-				this.app.vault
-			);
-
-			new Notice(`PaperExport: PDF saved to ${outputPath}`);
-
-			return outputPath;
+			try {
+				const outputPath = await exportToPdf(
+					mergedMarkdown,
+					outputFilename || this.settings.defaultFilename,
+					this.settings,
+					this.app.vault
+				);
+				
+				new Notice(`PaperExport: PDF saved to ${outputPath}`);
+				
+				return outputPath;
+			} catch (pdfError) {
+				console.error('PDF export error:', pdfError);
+				this.displayError(`Error exporting PDF: ${pdfError.message}`);
+				return null;
+			}
 		} catch (error) {
 			console.error("PaperExport: Error exporting files", error);
 			this.displayError(`Error exporting files: ${error.message}`);
