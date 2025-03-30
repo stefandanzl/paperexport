@@ -1,8 +1,71 @@
-/*
+/* PaperExport Plugin Styles */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+/* File Selection Modal */
+.paper-export-file-selection {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--background-modifier-border);
+    margin-bottom: 1em;
+    padding: 0.5em;
+}
 
-If your plugin does not need CSS, delete this file.
+.paper-export-file-item {
+    display: flex;
+    align-items: center;
+    padding: 0.3em 0;
+    border-bottom: 1px solid var(--background-modifier-border-hover);
+}
 
-*/
+.paper-export-file-item:last-child {
+    border-bottom: none;
+}
+
+.paper-export-file-item input[type="checkbox"] {
+    margin-right: 0.5em;
+}
+
+.paper-export-file-item label {
+    flex-grow: 1;
+}
+
+.paper-export-file-order {
+    width: 60px;
+    margin-left: 0.5em;
+}
+
+/* Settings Tab */
+.paper-export-settings h2 {
+    margin-top: 1.5em;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.paper-export-settings h3 {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
+.paper-export-settings .setting-item-description {
+    font-size: 0.85em;
+}
+
+.paper-export-settings textarea {
+    min-height: 150px;
+    font-family: var(--font-monospace);
+}
+
+/* Export button */
+.paper-export-buttons {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1em;
+}
+
+.paper-export-buttons button {
+    margin-left: 0.5em;
+}
+
+/* Ribbon icon */
+.paper-export-ribbon-icon:hover {
+    color: var(--interactive-accent);
+}

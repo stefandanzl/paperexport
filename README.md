@@ -1,94 +1,131 @@
-# Obsidian Sample Plugin
+# PaperExport for Obsidian
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+PaperExport is an Obsidian plugin designed specifically for academic writing. It allows you to:
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+- Write your academic papers in Markdown across multiple files
+- Merge these files together in a specified order
+- Export the merged content as a professional-looking PDF
+- Use customizable HTML templates for the PDF output
+- Handle academic citations and bibliography
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+## Features
 
-## First time developing plugins?
+- **Multiple File Merging**: Combine multiple Markdown files into a single document, perfect for working on different chapters or sections of a paper separately.
+- **Customizable Order**: Arrange your files in the desired sequence for the final document.
+- **Professional PDF Output**: Generate high-quality PDFs suitable for academic submission.
+- **Customizable Templates**: Use the default academic template or create your own HTML templates for full control over PDF appearance.
+- **YAML Frontmatter Support**: Extract metadata like title, author, and date from YAML frontmatter to include in your exports.
+- **MathJax Integration**: Support for mathematical equations using MathJax.
+- **Citation Support**: Process wiki-links as citations, automatically generating a references section based on linked markdown files.
 
-Quick starting guide for new plugin devs:
+## Installation
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+1. In Obsidian, go to Settings > Community Plugins
+2. Disable Safe Mode if necessary
+3. Click "Browse" and search for "PaperExport"
+4. Install the plugin and enable it
 
-## Releasing new releases
+## How to Use
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+### Basic Usage
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+1. Write your academic paper in multiple Markdown files
+2. Click the PaperExport icon in the left ribbon, or use the command "Export Academic Paper"
+3. Select the files you want to include and arrange them in order
+4. Enter a filename for the export
+5. Click "Export" and your PDF will be generated
 
-## Adding your plugin to the community plugin list
+### File Organization
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+Files can be organized in any way, but here are some suggested approaches:
 
-## How to use
+- Prefix filenames with numbers (e.g., "01-introduction.md", "02-literature-review.md")
+- Use YAML frontmatter to specify chapter numbers:
+  ```yaml
+  ---
+  title: Introduction
+  chapter: 1
+  ---
+  ```
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+### YAML Frontmatter
 
-## Manually installing the plugin
+The plugin recognizes the following frontmatter properties:
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+- `title`: The title of the chapter/section
+- `author`: The author's name (for title page)
+- `date`: The document date (for title page)
+- `chapter` or `order`: Numeric value for ordering files
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+### Citations with Wiki-Links
 
-## Funding URL
+PaperExport supports a native Obsidian approach to citations using wiki-links. Here's how it works:
 
-You can include funding URLs where people who use your plugin can financially support it.
+1. Create markdown files for your sources in a dedicated folder (e.g., `sources/`)
+2. Each source file should have frontmatter with properties like:
+   ```yaml
+   ---
+   title: The impact of markup languages on writing processes
+   short: Johnson (2018)  # This is what will appear in your citation
+   author: Johnson, K.
+   year: 2018
+   journal: Journal of Writing Research
+   volume: 10(1)
+   pages: 67-84
+   ---
+   ```
+3. In your paper, cite sources using standard Obsidian wiki-links: `[[johnson2018]]`
+4. When exporting, PaperExport will:
+   - Convert `[[johnson2018]]` to `[Johnson (2018)]` in the text (using the `short` property)
+   - Automatically generate a references section at the end with full details of all cited sources
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+## Settings
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
+PaperExport offers multiple configuration options:
 
-If you have multiple URLs, you can also do:
+- **Export Directory**: Choose where your PDFs will be saved
+- **Default Filename**: Set a default name for exported PDFs
+- **HTML Template**: Select a custom HTML template file
+- **Custom CSS**: Add your own CSS for precise control over the document appearance
+- **Page Size**: Choose between A4, A3, Letter, and Legal formats
+- **Margins**: Set custom margins for the document
+- **Content Options**:
+  - Include/exclude YAML frontmatter
+  - Enable/disable MathJax rendering
+- **Citation Settings**:
+  - Enable/disable wiki-link citation processing
+  - Set the sources folder path
+  - Choose whether to include an auto-generated references section
+  - Customize the references section title
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+## Templates
 
-## API Documentation
+PaperExport comes with a default academic template, but you can create your own. Templates are HTML files with placeholders that get replaced during export:
 
-See https://github.com/obsidianmd/obsidian-api
+- `{{title}}`: Document title
+- `{{author}}`: Author name
+- `{{date}}`: Document date
+- `{{content}}`: The merged markdown content (converted to HTML)
+- `{{pageSize}}`: Selected page size
+- `{{margins.top}}`, `{{margins.right}}`, etc.: Margin values
+- `{{customCss}}`: Custom CSS from settings
+- `{{#if renderMathJax}}...{{/if}}`: Conditional blocks
+
+## Roadmap
+
+Future features planned for PaperExport:
+
+- Enhanced citation features (custom citation styles, citation groups)
+- Integration with external reference managers like Zotero
+- Table of contents generation
+- Figure and table numbering
+- Multiple export formats (DocX, LaTeX)
+- Advanced template system with more placeholders
+
+## Support
+
+If you encounter any issues or have feature requests, please file them at the [GitHub repository](https://github.com/yourusername/paperexport).
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
