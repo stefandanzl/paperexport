@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 import { PaperExportSettings } from "../settings/settings";
 import { TFile, Vault, normalizePath } from "obsidian";
 import * as Showdown from "showdown";
@@ -306,12 +307,16 @@ export async function ensureOutputDirectory(
 	exportPath: string,
 	vault: Vault
 ): Promise<string> {
-	// Get the vault path
+	// Check if export path is valid
+	if (!exportPath || exportPath.trim() === "") {
+		return "";
+	}
+
+	// Normalize the path
 	const normalizedPath = normalizePath(exportPath);
 
 	// Create directory if it doesn't exist
-	// Use Obsidian's vault adapter to ensure the folder exists
-	if (!vault.adapter.exists(normalizedPath)) {
+	if (!(await vault.adapter.exists(normalizedPath))) {
 		await vault.adapter.mkdir(normalizedPath);
 	}
 
@@ -328,9 +333,17 @@ export async function exportToPdf(
 	vault: Vault
 ): Promise<string> {
 	try {
+		// Make sure we have a valid filename
+		if (!outputFilename || outputFilename.trim() === "") {
+			outputFilename = settings.defaultFilename || "exported_paper";
+		}
+
+		// Clean the filename of any special characters
+		outputFilename = outputFilename.replace(/[\/:*?"<>|]/g, "_");
+
 		// Determine the output path
 		let outputPath;
-		if (settings.exportPath) {
+		if (settings.exportPath && settings.exportPath.trim() !== "") {
 			// Ensure export directory exists
 			await ensureOutputDirectory(settings.exportPath, vault);
 			// Normalize the output path

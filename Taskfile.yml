@@ -4,7 +4,7 @@ version: "3"
 
 vars:
     PLUGIN: paperexport
-    VAULT: hirn
+    VAULT: paperexport
 
     DIR_PLUGIN: C:\PROJECTS\Obsidian\{{.VAULT}}\.obsidian\plugins\{{.PLUGIN}}
 
