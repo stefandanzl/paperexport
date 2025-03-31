@@ -13,11 +13,12 @@
 	"license": "MIT",
 	"dependencies": {
 		"html-pdf-node": "^1.0.8",
+		"pdf-lib": "^1.17.1",
 		"showdown": "^2.1.0"
 	},
 	"devDependencies": {
-		"@types/node": "^16.11.6",
 		"@types/html-pdf-node": "^1.0.0",
+		"@types/node": "^16.11.6",
 		"@types/showdown": "^2.0.0",
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
