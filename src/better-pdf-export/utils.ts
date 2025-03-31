@@ -1,5 +1,32 @@
 import { TFile, TFolder } from "obsidian";
 
+/**
+ * Join path segments, similar to Node.js path.join
+ * 
+ * @param {...string} segments - Path segments to join
+ * @returns {string} - Joined path with normalized separators
+ */
+export function joinPath(...segments: string[]): string {
+  // Filter out empty segments
+  const parts = segments.filter(segment => segment !== '');
+  
+  // Join with forward slash
+  let joined = parts.join('/');
+  
+  // Replace backslashes with forward slashes (for Windows paths)
+  joined = joined.replace(/\\/g, '/');
+  
+  // Replace multiple consecutive slashes with a single one
+  joined = joined.replace(/\/{2,}/g, '/');
+  
+  // Remove trailing slash
+  if (joined.endsWith('/')) {
+    joined = joined.slice(0, -1);
+  }
+  
+  return joined;
+}
+
 export class TreeNode {
   // h2-1, h3-2, etc
   key: string;

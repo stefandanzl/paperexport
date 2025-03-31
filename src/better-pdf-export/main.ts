@@ -1,10 +1,8 @@
 import { App, MarkdownView, Menu, Plugin, PluginManifest, TFile, TFolder } from "obsidian";
-import i18n, { Lang } from "./i18n";
 import { ExportConfigModal, TConfig } from "./modal";
 import ConfigSettingTab from "./setting";
-import { traverseFolder } from "./utils";
+import { joinPath, traverseFolder } from "./utils";
 import * as fs from "fs/promises";
-import path from "path";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -49,11 +47,9 @@ const DEFAULT_SETTINGS: BetterExportPdfPluginSettings = {
 
 export default class BetterExportPdfPlugin extends Plugin {
   settings: BetterExportPdfPluginSettings;
-  i18n: Lang;
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest);
-    this.i18n = i18n.current;
   }
 
   async onload() {
@@ -67,7 +63,7 @@ export default class BetterExportPdfPlugin extends Plugin {
   registerCommand() {
     this.addCommand({
       id: "export-current-file-to-pdf",
-      name: this.i18n.exportCurrentFile,
+      name: "Export current file to PDF",
       checkCallback: (checking: boolean) => {
         const view = this.app.workspace.getActiveViewOfType(MarkdownView);
         const file = view?.file;
@@ -162,7 +158,7 @@ export default class BetterExportPdfPlugin extends Plugin {
   async generateToc(root: TFolder | TFile) {
     // @ts-ignore
     const basePath = this.app.vault.adapter.basePath;
-    const toc = path.join(basePath, root.path, "_TOC_.md");
+    const toc = joinPath(basePath, root.path, "_TOC_.md");
     const content = `---\ntoc: true\ntitle: ${root.name}\n---\n`;
     await fs.writeFile(toc, content);
     if (root instanceof TFolder) {
