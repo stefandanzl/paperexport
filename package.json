@@ -12,8 +12,10 @@
 	"author": "",
 	"license": "MIT",
 	"dependencies": {
+		"fs": "^0.0.1-security",
 		"html-pdf-node": "^1.0.8",
 		"pdf-lib": "^1.17.1",
+		"playwright": "^1.51.1",
 		"showdown": "^2.1.0"
 	},
 	"devDependencies": {
