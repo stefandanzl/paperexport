@@ -302,6 +302,7 @@ export async function exportToPdf(markdownContent: string, outputFilename: strin
         }
 
         // Clean the filename of any special characters
+        // eslint-disable-next-line no-useless-escape
         outputFilename = outputFilename.replace(/[\/:*?"<>|]/g, "_");
 
         // Determine the output path

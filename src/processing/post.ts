@@ -1,6 +1,6 @@
 import { PDFDocument, rgb } from "pdf-lib";
 
-async function addPageNumbers(
+export async function addPageNumbers(
     pdfBuffer: Buffer,
     options?: {
         startNumber?: number;

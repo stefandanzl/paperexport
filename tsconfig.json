@@ -20,5 +20,10 @@
   },
   "include": [
     "**/*.ts"
+  ],
+  "exclude": [
+    "src/better-pdf-export",
+    "experiments",
+    "src/processing"
   ]
 }

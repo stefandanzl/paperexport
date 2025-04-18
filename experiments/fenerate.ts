@@ -1,4 +1,5 @@
 import { htmlToPdf } from "./html-pdf";
+//@ts-ignore
 import fs from "fs";
 
 async function generateExamplePdf() {
